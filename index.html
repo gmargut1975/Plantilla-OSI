@@ -9,7 +9,9 @@
 @media(prefers-color-scheme:dark){:root{--bg:#0f1614;--card:#18211e;--ink:#e8efec;--mut:#9aaba5;--line:#2a3733;--acc:#4fc3ae;--acc2:#1c2f2b;--warn:#f0c668;--warnbg:#33290f;--m:#f0b340;--t:#ef8a66;--n:#8aa8ee}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{padding:20px 16px 12px;max-width:1200px;margin:auto}
+header{padding:20px 16px 12px;max-width:1200px;margin:auto;display:flex;align-items:center;gap:20px}
+header .logo{height:72px;width:auto;flex:none;background:#fff;border-radius:6px;padding:4px}
+@media(max-width:600px){header{flex-direction:column;align-items:flex-start;gap:10px}header .logo{height:56px}}
 h1{margin:0;font-size:22px;letter-spacing:-.01em}
 header p{margin:4px 0 0;color:var(--mut);font-size:13px}
 main{max-width:1200px;margin:auto;padding:0 16px 40px;display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
@@ -84,8 +86,9 @@ footer{max-width:1200px;margin:auto;padding:0 16px 30px;color:var(--mut);font-si
 </head>
 <body>
 <header>
-  <h1>Plantilla por OSI y centro de trabajo</h1>
-  <p>Directorio de puestos · octubre 2025 · 2.871 centros · 32.383 plazas</p>
+  <img class="logo" src="logo-fss-ccoo.jpg" width="640" height="238" alt="CCOO Osasun Federakundea eta Gizarte-Osasun Sektoreak">
+  <div><h1>Plantilla por OSI y centro de trabajo</h1>
+  <p>Directorio de puestos · octubre 2025 · 2.871 centros · 32.383 plazas</p></div>
 </header>
 <main>
   <div class="side">
