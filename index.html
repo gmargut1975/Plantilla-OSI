@@ -42,6 +42,10 @@ select.mini{width:auto;padding:4px 6px;font-size:13px}
 #list li.oh{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);padding:12px 8px 4px}
 .chk{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin:12px 0 4px}
 .chk input{width:auto}
+.bk{display:block;font-size:11px;color:var(--mut);font-weight:400;white-space:nowrap}
+.z{color:var(--line)}
+table.ptab td{vertical-align:top}
+.pfil{margin-top:2px}
 .listcard{display:flex;flex-direction:column;min-height:0;flex:1}
 h2{margin:0;font-size:20px;letter-spacing:-.01em}
 h3{margin:0 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
@@ -144,8 +148,12 @@ function lstat(units,only){
     const st=fi<0?2:(D.f[fi]<=day?0:1);
     S.t+=n;S.pf[pf]+=n;S.m[pf][st]+=n;S.sit[s]+=n;if(sb)S.sub+=n;
     if(st===0)S.v+=n;else if(st===1){S.fu+=n;S.next[D.f[fi]]=(S.next[D.f[fi]]||0)+n}else S.np+=n;
-    const P=S.pu[pi]=S.pu[pi]||{t:0,pf:[0,0,0,0,0],v:0,sit:[0,0,0,0,0,0,0]};P.t+=n;P.pf[pf]+=n;if(st===0)P.v+=n;P.sit[s]+=n})});
+    const P=S.pu[pi]=S.pu[pi]||{t:0,pf:[0,0,0,0,0],m:[0,1,2,3,4].map(()=>[0,0,0]),v:0,sit:[0,0,0,0,0,0,0]};P.t+=n;P.pf[pf]+=n;P.m[pf][st]+=n;if(st===0)P.v+=n;P.sit[s]+=n})});
   return S}
+// celda con total y desglose por perfil para un estado (0 preceptivo, 1 fecha futura, 2 sin fecha)
+function brk(m,st){const ks=[1,2,3,4,0].filter(k=>m[k][st]), tot=ks.reduce((a,k)=>a+m[k][st],0);
+  return `<td class="n">${tot?`<b>${fmt(tot)}</b><span class="bk">${ks.map(k=>`${k?'PL'+k:'sin perfil'}: ${m[k][st]}`).join(' · ')}</span>`:'<span class="z">0</span>'}</td>`}
+const newM=()=>[0,1,2,3,4].map(()=>[0,0,0]);
 const pct=(a,b)=>b?Math.round(a/b*100)+' %':'–';
 function langCards(units,only){
   const S=lstat(units,only);if(!S.t)return '';
@@ -164,9 +172,11 @@ function langCards(units,only){
     <div class="gbar">${sitKs.map(k=>`<div title="${SIT[k][0]}: ${S.sit[k]}" style="width:${S.sit[k]/S.t*100}%;background:${SIT[k][1]}"></div>`).join('')}</div>
     <div class="legend">${sitKs.map(k=>`<span><i style="background:${SIT[k][1]}"></i>${SIT[k][0]}: <b>${fmt(S.sit[k])}</b> (${pct(S.sit[k],S.t)})</span>`).join('')}</div>
     ${S.sub?`<p class="hint">Además, ${fmt(S.sub)} plazas tienen a alguien sustituyendo al titular.</p>`:''}</div>
-  <div class="card"><h3>Detalle por puesto</h3><div class="tw"><table><thead><tr><th>Puesto</th><th class="n">Plazas</th>${PLc.map(k=>`<th class="n">PL${k}</th>`).join('')}<th class="n">Precept.</th><th class="n">Fijas</th><th class="n">Interinas</th><th class="n">Otras</th></tr></thead><tbody>
-    ${pus.map(([pi,v])=>`<tr><td>${esc(D.p[pi][0])}<span class="osi">${D.p[pi][1]}</span></td><td class="n">${fmt(v.t)}</td>${PLc.map(k=>`<td class="n">${v.pf[k]||''}</td>`).join('')}<td class="n">${v.v||''}</td><td class="n">${v.sit[0]||''}</td><td class="n">${v.sit[1]||''}</td><td class="n">${(v.t-v.sit[0]-v.sit[1])||''}</td></tr>`).join('')}
-    </tbody></table></div><p class="hint">«Otras» incluye temporales, laborales, directivas, plazas cubiertas solo por sustituto y plazas sin relación laboral.</p></div>`}
+  <div class="card"><h3>Plazas por puesto y perfil lingüístico</h3>
+    <input type="search" class="pfil" placeholder="Filtrar puesto (p. ej. cocin, enfermer, celador)" autocomplete="off">
+    <div class="tw" style="margin-top:8px"><table class="ptab"><thead><tr><th>Puesto</th><th class="n">Plazas</th><th class="n">Con perfil preceptivo</th>${S.fu?'<th class="n">Fecha futura</th>':''}<th class="n">Sin preceptividad</th><th class="n">Fijas</th><th class="n">Interinas</th><th class="n">Otras</th></tr></thead><tbody>
+    ${pus.map(([pi,v])=>`<tr data-q="${esc(norm(D.p[pi][0]+' '+D.p[pi][1]))}"><td><a href="#" data-pu="${pi}">${esc(D.p[pi][0])}</a><span class="osi">${D.p[pi][1]}</span></td><td class="n"><b>${fmt(v.t)}</b></td>${brk(v.m,0)}${S.fu?brk(v.m,1):''}${brk(v.m,2)}<td class="n">${v.sit[0]||''}</td><td class="n">${v.sit[1]||''}</td><td class="n">${(v.t-v.sit[0]-v.sit[1])||''}</td></tr>`).join('')}
+    </tbody></table></div><p class="hint">«Con perfil preceptivo»: la plaza exige ese perfil para acceder (su fecha de preceptividad ya ha pasado el día elegido). «Sin preceptividad»: la plaza tiene perfil asignado pero sin fecha, o no tiene perfil. Pulsa un puesto para ver en qué centros está. «Otras» incluye temporales, laborales, directivas, cubiertas solo por sustituto y sin relación laboral.</p></div>`}
 const SH={m:['Mañana','--m'],t:['Tarde','--t'],n:['Noche','--n']}, KS=['m','t','n'];
 const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const DEF={H:1592,abs:0,turno:7,lab:248,s2:60,s3m:40,s3t:35};
@@ -347,9 +357,11 @@ function renderCatBody(){
   units.forEach(([o,i])=>{const c=D.osis[o].c[i];let n=0;c.p.forEach(([pi,k])=>{if(inCat(pi)){n+=k;pu[pi]=(pu[pi]||0)+k}});
     if(!n)return;const pat=pats[key(o,i)],e=pat?estimate(n,pat,d):null;if(e){def++;KS.forEach(x=>te[x]+=e[x])}
     const g=st.cg?UG[o][i]:-1, id=g>=0?'g'+o+','+g:'u'+o+','+i;
-    let r=R[id];if(!r){r=R[id]={o,n:0,e:null,u:0,name:g>=0?SG[o][g].n:c.n,a:g>=0?`data-sg="${o},${g}"`:`data-o="${o}" data-i="${i}"`,grp:g>=0};rows.push(r)}
+    let r=R[id];if(!r){r=R[id]={o,n:0,e:null,u:0,m:newM(),name:g>=0?SG[o][g].n:c.n,a:g>=0?`data-sg="${o},${g}"`:`data-o="${o}" data-i="${i}"`,grp:g>=0};rows.push(r)}
+    c.x.forEach(([pi,pf,fi,s,sb,k])=>{if(inCat(pi))r.m[pf][fi<0?2:(D.f[fi]<=d?0:1)]+=k});
     r.n+=n;r.u++;if(e){r.e=r.e||{m:0,t:0,n:0};KS.forEach(x=>r.e[x]+=e[x])}});
   rows.sort((a,b)=>b.n-a.n);
+  const TM=newM();rows.forEach(r=>r.m.forEach((x,k)=>x.forEach((v,j)=>TM[k][j]+=v)));const fu=TM.some(x=>x[1]);
   const n=rows.reduce((s,r)=>s+r.n,0), mx=rows[0]?rows[0].n:1, orgs=new Set(rows.map(r=>r.o)).size>1, f=st.q.trim();
   $('#catk').innerHTML=`<div class="kpis"><div class="kpi"><b>${fmt(totAll)}</b><span>plazas en ${esc(scopeName())}</span></div><div class="kpi"><b>${Math.round(totAll/scopeT*100)} %</b><span>de la plantilla</span></div>${f?`<div class="kpi"><b>${fmt(n)}</b><span>en centros con «${esc(f)}»</span></div>`:`<div class="kpi"><b>${fmt(rows.length)}</b><span>centros donde hay</span></div>`}</div>`;
   const pus=Object.entries(pu).sort((a,b)=>b[1]-a[1]);
@@ -361,9 +373,9 @@ function renderCatBody(){
     <label class="chk"><input type="checkbox" id="cgchk" ${st.cg?'checked':''}> Juntar las unidades de cada hospital o centro</label>
     ${st.k.f!=null&&pus.length>1?`<p class="hint">Incluye: ${pus.map(([pi,k])=>`<a href="#" data-pu="${pi}">${esc(D.p[pi][0])} (${D.p[pi][1]})</a> ${fmt(k)}`).join(' · ')}</p>`:''}
     ${byOrg}
-    <div class="tw"><table><thead><tr><th>Centro</th><th></th><th class="n">Plazas</th>${def?KS.map(k=>`<th class="n">≈ ${SH[k][0]}</th>`).join(''):''}</tr></thead><tbody>
-    ${rows.map(r=>`<tr><td><a href="#" ${r.a}>${r.grp?`<b>${esc(r.name)}</b>`:esc(r.name)}</a>${r.grp||orgs?`<span class="osi">${r.grp?r.u+(r.u>1?' unidades':' unidad'):''}${r.grp&&orgs?' · ':''}${orgs?esc(D.osis[r.o].n):''}</span>`:''}</td><td class="b"><div class="bar" style="width:${r.n/mx*100}%"></div></td><td class="n">${fmt(r.n)}</td>${def?KS.map(k=>`<td class="n">${r.e?f1(r.e[k]):'–'}</td>`).join(''):''}</tr>`).join('')}
-    <tr class="tot"><td colspan="2">Total${rows.length>1?` (${rows.length} ${st.cg?'centros':'unidades'})`:''}</td><td class="n">${fmt(n)}</td>${def?KS.map(k=>`<td class="n">${f1(te[k])}</td>`).join(''):''}</tr></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Centro</th><th></th><th class="n">Plazas</th><th class="n">Con perfil preceptivo</th>${fu?'<th class="n">Fecha futura</th>':''}<th class="n">Sin preceptividad</th>${def?KS.map(k=>`<th class="n">≈ ${SH[k][0]}</th>`).join(''):''}</tr></thead><tbody>
+    ${rows.map(r=>`<tr><td><a href="#" ${r.a}>${r.grp?`<b>${esc(r.name)}</b>`:esc(r.name)}</a>${r.grp||orgs?`<span class="osi">${r.grp?r.u+(r.u>1?' unidades':' unidad'):''}${r.grp&&orgs?' · ':''}${orgs?esc(D.osis[r.o].n):''}</span>`:''}</td><td class="b"><div class="bar" style="width:${r.n/mx*100}%"></div></td><td class="n"><b>${fmt(r.n)}</b></td>${brk(r.m,0)}${fu?brk(r.m,1):''}${brk(r.m,2)}${def?KS.map(k=>`<td class="n">${r.e?f1(r.e[k]):'–'}</td>`).join(''):''}</tr>`).join('')}
+    <tr class="tot"><td colspan="2">Total${rows.length>1?` (${rows.length} ${st.cg?'centros':'unidades'})`:''}</td><td class="n">${fmt(n)}</td>${brk(TM,0)}${fu?brk(TM,1):''}${brk(TM,2)}${def?KS.map(k=>`<td class="n">${f1(te[k])}</td>`).join(''):''}</tr></tbody></table></div>
     ${def?`<p class="hint">Las columnas por turno solo suman los ${def} centros cuyo funcionamiento has marcado (estimación teórica para el ${esc(dname())}).</p>`:''}`;
 }
 function renderDetail(){if(st.c)renderCentre();else if(st.k)renderCat();else if(st.s)renderGroup();else if(st.g&&st.q.trim()&&matches().length)renderGroup();else{st.g=false;renderOrg()}}
@@ -400,6 +412,8 @@ $('#detail').addEventListener('change',e=>{const ds=e.target.dataset;
   if(!ds.cfg)return;const v=parseFloat(e.target.value);if(isFinite(v)&&v>=0){cfg[ds.cfg]=v;if(cfg.s3m+cfg.s3t>100)cfg.s3t=100-cfg.s3m;store.set('plantilla.cfg',cfg)}renderDetail()});
 $('#detail').addEventListener('change',e=>{if(e.target.id==='cgchk'){st.cg=e.target.checked;store.set('plantilla.cg',st.cg);renderCatBody()}});
 $('#detail').addEventListener('input',e=>{if(e.target.id!=='cq')return;st.q=e.target.value;$('#q').value=st.q;renderCatBody();renderList();writeHash()});
+$('#detail').addEventListener('input',e=>{if(!e.target.classList.contains('pfil'))return;const toks=norm(e.target.value).split(/\s+/).filter(Boolean);
+  e.target.closest('.card').querySelectorAll('tr[data-q]').forEach(tr=>{tr.hidden=!toks.every(x=>tr.dataset.q.includes(x))})});
 $('#detail').addEventListener('toggle',e=>{if(e.target.id==='pdet')store.set('plantilla.open',e.target.open)},true);
 addEventListener('hashchange',()=>{readHash();render()});
 render();
