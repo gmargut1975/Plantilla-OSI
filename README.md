@@ -1,7 +1,7 @@
 # Plantilla por OSI y centro de trabajo
 
 Web estática para consultar cuántas plazas hay en cada OSI y centro de trabajo
-(datos de «Puestos por centro de trabajo», octubre 2025) y estimar cuántas
+(datos de la plantilla estructural de Osakidetza, mayo 2026: perfil lingüístico, preceptividad y situación de cada plaza) y estimar cuántas
 personas trabajan un día concreto en cada turno.
 
 Todo está en un único archivo, `index.html` (datos incluidos). No necesita
